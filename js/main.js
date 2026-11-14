@@ -9,54 +9,42 @@ function setTheme(theme) {
   } catch (e) {}
 }
 
-// progress curve: rush up, overshoot near the top, backwash a little, then settle at full cover
-const curve = [[0, 0], [0.5, 0.93], [0.7, 0.985], [0.86, 0.94], [1, 1]];
 const FRAMES = 72;
-const FOAM = 28;
+const POINTS = 120;
+const FOAM = 30;
 let busy = false;
 
-function waveFrame(progress, offset) {
-  const w = innerWidth;
-  const h = innerHeight;
-  const amp = h * 0.06;
-  const wave = amp * Math.sin(Math.PI * progress);
-  // front travels from just below the viewport to just above it, so p=0 shows nothing and p=1 covers every corner
-  const base = (h + 2 * amp) * (1 - progress) - amp + offset;
+// splashing front around (ox, oy): radius = growth + peaky travelling lobes; shrink pulls the inner foam edge in
+function ringPoints(progress, shrink, ox, oy) {
+  const far = Math.hypot(Math.max(ox, innerWidth - ox), Math.max(oy, innerHeight - oy));
+  const amax = 0.07 * Math.min(innerWidth, innerHeight);
+  const radius = progress * (far + amax + 40);
+  const amp = amax * (1 + 1.5 * Math.exp(-radius / 150)) * Math.pow(Math.sin(Math.PI * progress), 0.8);
+  const roll = progress * 2 * Math.PI;
   const pts = [];
-  for (let i = 0; i <= 48; i++) {
-    const x = (i / 48) * w;
-    const u = (x / w) * 2 * Math.PI;
-    const roll = progress * 2 * Math.PI;
-    const y = base + wave * (0.6 * Math.sin(u * 1.5 - roll * 2) + 0.3 * Math.sin(u * 2.5 + roll * 3) + 0.2 * Math.sin(u * 4 - roll));
-    pts.push(`${x.toFixed(1)}px ${y.toFixed(1)}px`);
+  for (let i = 0; i <= POINTS; i++) {
+    const a = (i / POINTS) * 2 * Math.PI;
+    const ripple = 0.45 * (1 - 2 * Math.abs(Math.sin(2.5 * a + roll))) + 0.35 * (1 - 2 * Math.abs(Math.sin(4.5 * a - roll * 3))) + 0.3 * (1 - 2 * Math.abs(Math.sin(7 * a + roll * 2)));
+    const r = Math.max(0, radius + amp * ripple - shrink);
+    pts.push(`${(ox + r * Math.cos(a)).toFixed(1)}px ${(oy + r * Math.sin(a)).toFixed(1)}px`);
   }
   return pts;
 }
 
-function waveFrames(offset, band) {
-  const h = innerHeight;
+// fast crash outward (strong ease-out), then a slow settle; the foam thins out and trails the front at the end
+function waveFrames(ox, oy, band) {
   const frames = [];
   for (let i = 0; i <= FRAMES; i++) {
     const t = i / FRAMES;
-    let k = 1;
-    while (curve[k][0] < t) {
-      k++;
-    }
-    const [t0, p0] = curve[k - 1];
-    const [t1, p1] = curve[k];
-    let u = (t - t0) / (t1 - t0);
-    if (k === 1) {
-      u = 1 - Math.pow(1 - u, 2.2);
-    } else {
-      u = u * u * (3 - 2 * u);
-    }
-    const p = p0 + (p1 - p0) * u;
-    const front = waveFrame(p, 0);
-    let poly = front.concat([`${innerWidth}px ${h * 2}px`, `0px ${h * 2}px`]);
+    const p = 1 - Math.pow(1 - t, 2.2);
     if (band) {
-      poly = front.concat(waveFrame(p, Math.min(FOAM, 0.05 * innerHeight)).reverse());
+      const width = FOAM * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.6)), 0.8);
+      const outer = ringPoints(p, 0, ox, oy);
+      const inner = ringPoints(p, width, ox, oy).reverse();
+      frames.push(`polygon(evenodd,${outer.concat(inner).join(",")})`);
+    } else {
+      frames.push(`polygon(${ringPoints(p, 0, ox, oy).join(",")})`);
     }
-    frames.push(`polygon(${poly.join(",")})`);
   }
   return frames;
 }
@@ -74,6 +62,9 @@ function flip() {
     return;
   }
   busy = true;
+  const box = toggle.getBoundingClientRect();
+  const ox = box.left + box.width / 2;
+  const oy = box.top + box.height / 2;
   const foam = document.createElement("div");
   foam.className = "wave-foam";
   foam.setAttribute("aria-hidden", "true");
@@ -82,9 +73,9 @@ function flip() {
     root.appendChild(foam);
   });
   transition.ready.then(() => {
-    const timing = { duration: 1600, easing: "linear" };
-    root.animate({ clipPath: waveFrames(0, false) }, { ...timing, pseudoElement: "::view-transition-new(root)" });
-    root.animate({ clipPath: waveFrames(0, true) }, { ...timing, pseudoElement: "::view-transition-new(foam)" });
+    const timing = { duration: 1500, easing: "linear" };
+    root.animate({ clipPath: waveFrames(ox, oy, false) }, { ...timing, pseudoElement: "::view-transition-new(root)" });
+    root.animate({ clipPath: waveFrames(ox, oy, true) }, { ...timing, pseudoElement: "::view-transition-new(foam)" });
   }).catch(() => {});
   transition.finished.finally(() => {
     foam.remove();
