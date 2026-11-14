@@ -15,17 +15,18 @@ const PROFILES = {
   full: { frames: 48, points: 128, spray: 100, dpr: 1.5, duration: 1500, layers: 2 },
   lite: { frames: 40, points: 64, spray: 0, dpr: 1, duration: 1100, layers: 1 }
 };
-const coarse = window.matchMedia("(pointer: coarse)");
+const wantFull = new URLSearchParams(location.search).get("wave") === "full";
 let busy = false;
 let slow = false;
 let strikes = 0;
 let cache = null;
 
 function pick() {
-  if (navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4 || coarse.matches || slow) {
-    return PROFILES.lite;
+  // lite is the default for everyone; add ?wave=full to the address to try the full effect
+  if (wantFull && !slow) {
+    return PROFILES.full;
   }
-  return PROFILES.full;
+  return PROFILES.lite;
 }
 
 // same easing as the wave: fast crash outward, then a slow settle
