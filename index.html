@@ -2,6 +2,8 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/png" href="assets/favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Thai Van Le | Software Engineer</title>
 <meta name="description" content="Thai Van Le, a software engineer with a passion for AI.">
@@ -16,7 +18,7 @@
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
 <div class="wrap">
-<a class="brand" href="index.html">Thai<span>.</span></a>
+<a class="brand" href="index.html" aria-label="Thai Van Le, home"><img src="assets/logo.svg" alt="" width="36" height="36">Thai<span>.</span></a>
 <nav id="nav" aria-label="Main"><ul><li><a href="index.html" aria-current="page">Home</a></li><li><a href="projects.html">Projects</a></li><li><a href="experience.html">Experience</a></li><li><a href="offline.html">Offline</a></li></ul></nav>
 <button class="icon-btn theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme (T)"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.900 4.900l1.400 1.400m11.400 11.400 1.400 1.400M2 12h2m16 0h2M4.900 19.100l1.400-1.400M17.700 6.300l1.400-1.400"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.800A9 9 0 1 1 11.200 3a7 7 0 0 0 9.800 9.800z"/></svg></button>
 <button class="icon-btn menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -47,9 +49,13 @@
 </div>
 </div>
 </section>
-<section class="teasers" aria-label="Explore">
-<a class="teaser rise" style="--i:5" href="projects.html"><h2>Recent projects</h2><p>A few things I've built and shipped.</p><span class="go">View projects &rarr;</span></a>
-<a class="teaser rise" style="--i:6" href="offline.html"><h2>Offline</h2><p>What I'm up to when the laptop is closed.</p><span class="go">See the other side &rarr;</span></a>
+<section class="teaser rise" style="--i:5" aria-labelledby="t-proj">
+<h2 class="big" id="t-proj"><span>Recent</span> <span class="dim">projects</span></h2>
+<ul class="rows"><li><a class="row" href="projects.html"><span class="tile t1" aria-hidden="true"></span><span class="txt"><b>Project name</b><span>AI tool</span></span><svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></li><li><a class="row" href="projects.html"><span class="tile t2" aria-hidden="true"></span><span class="txt"><b>Project name</b><span>Web app</span></span><svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></li><li><a class="row" href="projects.html"><span class="tile t3" aria-hidden="true"></span><span class="txt"><b>Project name</b><span>Open source</span></span><svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></li></ul>
+</section>
+<section class="teaser rise" style="--i:6" aria-labelledby="t-off">
+<h2 class="big" id="t-off"><span>Offline</span> <span class="dim">hobbies</span></h2>
+<ul class="rows"><li><a class="row" href="offline.html"><span class="tile t1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.500"/></svg></span><span class="txt"><b>Photography</b><span>Chasing good light</span></span><svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></li><li><a class="row" href="offline.html"><span class="tile t2" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10v5M4.500 12.500h5"/><circle cx="16" cy="11.500" r=".8"/><circle cx="18" cy="13.500" r=".8"/></svg></span><span class="txt"><b>Gaming</b><span>Playing for the stories</span></span><svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></li><li><a class="row" href="offline.html"><span class="tile t3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="17.500" cy="16" r="2.500"/></svg></span><span class="txt"><b>Music</b><span>Always something on</span></span><svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></li></ul>
 </section>
 </div>
 </main>
