@@ -54,7 +54,7 @@ function waveFrames(offset, band) {
     const front = waveFrame(p, 0);
     let poly = front.concat([`${innerWidth}px ${h * 2}px`, `0px ${h * 2}px`]);
     if (band) {
-      poly = front.concat(waveFrame(p, FOAM).reverse());
+      poly = front.concat(waveFrame(p, Math.min(FOAM, 0.05 * innerHeight)).reverse());
     }
     frames.push(`polygon(${poly.join(",")})`);
   }
@@ -89,7 +89,7 @@ function flip() {
   transition.finished.finally(() => {
     foam.remove();
     busy = false;
-  });
+  }).catch(() => {});
 }
 
 toggle.addEventListener("click", flip);
