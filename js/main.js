@@ -25,7 +25,7 @@ function flip(x, y) {
       { clipPath: [`circle(0 at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
       { duration: 800, easing: "cubic-bezier(.4,0,.2,1)", pseudoElement: "::view-transition-new(root)" }
     );
-  });
+  }).catch(() => {});
 }
 
 toggle.addEventListener("click", (e) => {
@@ -43,7 +43,7 @@ toggle.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   const el = e.target;
   const typing = el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
-  if (e.key.toLowerCase() === "t" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+  if (e.key && !e.repeat && e.key.toLowerCase() === "t" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
     const box = toggle.getBoundingClientRect();
     flip(box.left + box.width / 2, box.top + box.height / 2);
   }
