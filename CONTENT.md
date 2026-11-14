@@ -31,5 +31,7 @@ Static card: portrait, name, short tagline, social icons. See the Sawad entry in
 2. Tempo: code https://github.com/Thai2229/Tempo (no live demo)
 3. Productivity App: live https://productivityappthai.vercel.app/, code https://github.com/Thai2229/Productivity-App
 
+Thumbnails (assets/projects/): physics-engine.webp is a live-site screenshot of the demo (double pendulum), productivity-app.webp is a crop of a screenshot of the live landing page, tempo.webp is a frame cropped from the Tempo repo's docs/demo.gif (no live site).
+
 ## Not on the site
 Phone number, GPA and pay rate from the resume are left out on purpose.
