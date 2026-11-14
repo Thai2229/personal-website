@@ -18,6 +18,7 @@ const PROFILES = {
 const coarse = window.matchMedia("(pointer: coarse)");
 let busy = false;
 let slow = false;
+let strikes = 0;
 let cache = null;
 
 function pick() {
@@ -170,13 +171,22 @@ function build(ox, oy, p) {
 }
 
 function warm() {
+  if (busy) {
+    return;
+  }
   const [ox, oy] = origin();
   const p = pick();
+  if (cache && cache.key === cacheKey(ox, oy, p)) {
+    return;
+  }
   cache = build(ox, oy, p);
 }
 
 // keep the click path free of keyframe maths: build when idle, rebuild after resizes
 function later() {
+  if (!document.startViewTransition || reduced.matches) {
+    return;
+  }
   if (window.requestIdleCallback) {
     requestIdleCallback(warm, { timeout: 2000 });
     return;
@@ -204,7 +214,6 @@ function flip() {
     return;
   }
   busy = true;
-  const t0 = performance.now();
   const [ox, oy] = origin();
   const p = pick();
   let data = cache;
@@ -212,6 +221,7 @@ function flip() {
     data = build(ox, oy, p);
     cache = data;
   }
+  const t1 = performance.now();
   const overlays = LAYERS.slice(0, p.layers).map(([name, fill]) => {
     const el = document.createElement("div");
     el.className = "wave-foam";
@@ -239,16 +249,19 @@ function flip() {
     clearTimeout(timer);
     overlays.forEach((el) => el.remove());
     busy = false;
+    later();
   }
   const transition = document.startViewTransition(() => {
     setTheme(next);
     overlays.forEach((el) => root.appendChild(el));
   });
   transition.ready.then(() => {
-    // a slow first frame means a weak device: use the lite profile from now on
-    if (performance.now() - t0 > 400 && p !== PROFILES.lite) {
+    // two slow first frames in a row mean a weak device: use the lite profile from then on
+    if (performance.now() - t1 > 400 && p !== PROFILES.lite) {
+      strikes += 1;
+    }
+    if (strikes >= 2) {
       slow = true;
-      later();
     }
     const timing = { duration: p.duration, easing: "linear" };
     const wave = root.animate({ clipPath: data.root }, { ...timing, pseudoElement: "::view-transition-new(root)" });
