@@ -10,10 +10,10 @@ function setTheme(theme) {
 }
 
 const FRAMES = 72;
-const POINTS = 180;
+const POINTS = 240;
 const FOAM = 30;
 const DURATION = 1500;
-const SPRAY = 150;
+const SPRAY = 200;
 let busy = false;
 
 // same easing as the wave: fast crash outward, then a slow settle
@@ -66,11 +66,11 @@ function jitter(t, a) {
   return 3 * envelope(t) * (1 + Math.sin(23 * a + s) * Math.sin(37 * a - 1.3 * s));
 }
 
-// foam fingers shooting out past the crests: sharp 18/22 lobes, longest mid-run, gone at the end
+// foam fingers shooting out past the crests: spiky 24/32 lobes, longest mid-run, gone at the end
 function lead(t, a) {
   const roll = t * 2 * Math.PI;
-  const sharp = 0.55 * Math.pow(Math.abs(Math.sin(9 * a + roll * 2)), 4) + 0.45 * Math.pow(Math.abs(Math.sin(11 * a - roll * 3)), 4);
-  return 0.09 * Math.min(innerWidth, innerHeight) * Math.sin(Math.PI * t) * (0.15 + sharp);
+  const sharp = 0.6 * Math.pow(1 - Math.abs(Math.sin(12 * a + roll * 2)), 3) + 0.5 * Math.pow(1 - Math.abs(Math.sin(16 * a - roll * 3)), 3);
+  return 0.15 * Math.min(innerWidth, innerHeight) * Math.sin(Math.PI * t) * (0.05 + sharp);
 }
 
 // streaks of foam bleeding back into the water
@@ -80,7 +80,7 @@ function streak(t, a) {
 
 // [name, fill, (t, a) => [outer, inner] offsets from the front]
 const LAYERS = [
-  ["trail", "rgba(250,247,243,.4)", (t, a) => [-0.3 * width(t) - jitter(t, a), -width(t) * (1.5 + 2.5 * streak(t, a))]],
+  ["trail", "rgba(160,200,228,.3)", (t, a) => [-0.3 * width(t) - jitter(t, a), -width(t) * (1.3 + 1.4 * streak(t, a))]],
   ["foam", "rgba(250,247,243,.85)", (t, a) => [jitter(t, a), -width(t)]],
   ["lead", "rgba(250,247,243,.85)", (t, a) => [jitter(t, a) + lead(t, a), jitter(t, a) - 1]],
   ["wet", "rgba(47,111,159,.6)", (t, a) => [jitter(t, a) + lead(t, a) + envelope(t), jitter(t, a) + lead(t, a) - 2.5 * envelope(t)]]
@@ -117,7 +117,7 @@ function sprayParticles(ox, oy) {
         r0 = r;
       }
     }
-    list.push({ s, a, r0, life: 0.2 + 0.25 * Math.random(), drift: (Math.random() - 0.5) * 0.12, d: 15 + 140 * Math.pow(Math.random(), 1.5), size: 1.5 + 4.5 * Math.pow(Math.random(), 2) });
+    list.push({ s, a, r0, life: 0.25 + 0.3 * Math.random(), drift: (Math.random() - 0.5) * 0.16, d: 20 + 220 * Math.pow(Math.random(), 1.3), size: 1.5 + 4.5 * Math.pow(Math.random(), 1.5) });
   }
   return list;
 }
