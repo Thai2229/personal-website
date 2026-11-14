@@ -171,6 +171,8 @@ function flip() {
   canvas.className = "wave-spray";
   canvas.width = Math.round(innerWidth * dpr);
   canvas.height = Math.round(innerHeight * dpr);
+  canvas.style.width = innerWidth + "px";
+  canvas.style.height = innerHeight + "px";
   canvas.setAttribute("aria-hidden", "true");
   overlays.push(canvas);
   let frame = 0;
@@ -181,7 +183,6 @@ function flip() {
     overlays.forEach((el) => el.remove());
     busy = false;
   }
-  timer = setTimeout(cleanup, DURATION + 1500);
   const transition = document.startViewTransition(() => {
     setTheme(next);
     overlays.forEach((el) => root.appendChild(el));
@@ -189,9 +190,11 @@ function flip() {
   transition.ready.then(() => {
     const timing = { duration: DURATION, easing: "linear" };
     const wave = root.animate({ clipPath: waveFrames(ox, oy) }, { ...timing, pseudoElement: "::view-transition-new(root)" });
-    LAYERS.forEach(([name, fill, edge]) => {
+    LAYERS.forEach(([name, , edge]) => {
       root.animate({ clipPath: waveFrames(ox, oy, edge) }, { ...timing, pseudoElement: `::view-transition-new(${name})` });
     });
+    // stall guard starts with the animation, not at the click
+    timer = setTimeout(cleanup, DURATION + 1500);
     const ctx = canvas.getContext("2d");
     const list = sprayParticles(ox, oy);
     ctx.scale(dpr, dpr);
