@@ -9,12 +9,23 @@ function setTheme(theme) {
   } catch (e) {}
 }
 
-const FRAMES = 72;
-const POINTS = 240;
 const FOAM = 30;
-const DURATION = 1500;
-const SPRAY = 200;
+// full = capable desktop, lite = weak/touch devices (fewer layers, vertices, droplets; shorter)
+const PROFILES = {
+  full: { frames: 48, points: 128, spray: 100, dpr: 1.5, duration: 1500, layers: 2 },
+  lite: { frames: 40, points: 64, spray: 0, dpr: 1, duration: 1100, layers: 1 }
+};
+const coarse = window.matchMedia("(pointer: coarse)");
 let busy = false;
+let slow = false;
+let cache = null;
+
+function pick() {
+  if (navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4 || coarse.matches || slow) {
+    return PROFILES.lite;
+  }
+  return PROFILES.full;
+}
 
 // same easing as the wave: fast crash outward, then a slow settle
 function ease(t) {
@@ -37,7 +48,7 @@ function front(progress, a, ox, oy) {
 }
 
 // off(a) moves the ring radially relative to the front (negative = trailing behind it)
-function ringPoints(progress, off, ox, oy) {
+function ringPoints(progress, off, ox, oy, POINTS) {
   const pts = [];
   for (let i = 0; i <= POINTS; i++) {
     const a = (i / POINTS) * 2 * Math.PI;
@@ -73,39 +84,32 @@ function lead(t, a) {
   return 0.15 * Math.min(innerWidth, innerHeight) * Math.sin(Math.PI * t) * (0.05 + sharp);
 }
 
-// streaks of foam bleeding back into the water
-function streak(t, a) {
-  return Math.pow(Math.abs(Math.sin(13 * a + t * 9)), 3);
-}
-
-// [name, fill, (t, a) => [outer, inner] offsets from the front]
+// [name, fill, (t, a) => [outer, inner] offsets from the front]; foam band and lead fingers share one layer
 const LAYERS = [
-  ["trail", "rgba(160,200,228,.3)", (t, a) => [-0.3 * width(t) - jitter(t, a), -width(t) * (1.3 + 1.4 * streak(t, a))]],
-  ["foam", "rgba(250,247,243,.85)", (t, a) => [jitter(t, a), -width(t)]],
-  ["lead", "rgba(250,247,243,.85)", (t, a) => [jitter(t, a) + lead(t, a), jitter(t, a) - 1]],
+  ["foam", "rgba(250,247,243,.85)", (t, a) => [jitter(t, a) + lead(t, a), -width(t)]],
   ["wet", "rgba(47,111,159,.6)", (t, a) => [jitter(t, a) + lead(t, a) + envelope(t), jitter(t, a) + lead(t, a) - 2.5 * envelope(t)]]
 ];
 
-function waveFrames(ox, oy, edge) {
+function waveFrames(ox, oy, p, edge) {
   const frames = [];
-  for (let i = 0; i <= FRAMES; i++) {
-    const t = i / FRAMES;
-    const p = ease(t);
+  for (let i = 0; i <= p.frames; i++) {
+    const t = i / p.frames;
+    const e = ease(t);
     if (edge) {
-      const outer = ringPoints(p, (a) => edge(t, a)[0], ox, oy);
-      const inner = ringPoints(p, (a) => edge(t, a)[1], ox, oy).reverse();
+      const outer = ringPoints(e, (a) => edge(t, a)[0], ox, oy, p.points);
+      const inner = ringPoints(e, (a) => edge(t, a)[1], ox, oy, p.points).reverse();
       frames.push(`polygon(evenodd,${outer.concat(inner).join(",")})`);
     } else {
-      frames.push(`polygon(${ringPoints(p, null, ox, oy).join(",")})`);
+      frames.push(`polygon(${ringPoints(e, null, ox, oy, p.points).join(",")})`);
     }
   }
   return frames;
 }
 
 // droplets launched from the crest points, flying outward ahead of the front
-function sprayParticles(ox, oy) {
+function sprayParticles(ox, oy, p) {
   const list = [];
-  for (let i = 0; i < SPRAY; i++) {
+  for (let i = 0; i < p.spray; i++) {
     const s = 0.04 + 0.7 * Math.pow(Math.random(), 1.3);
     let a = 0;
     let r0 = -1;
@@ -124,23 +128,68 @@ function sprayParticles(ox, oy) {
 
 function drawSpray(ctx, list, t, ox, oy) {
   ctx.clearRect(0, 0, innerWidth, innerHeight);
+  const run = reach(ox, oy);
+  const et = ease(t);
+  ctx.fillStyle = "rgb(250,247,243)";
+  ctx.strokeStyle = "rgb(47,111,159)";
+  ctx.lineWidth = 1;
   for (const q of list) {
     const u = (t - q.s) / q.life;
     if (u < 0 || u > 1) {
       continue;
     }
-    const r = q.r0 + (ease(t) - ease(q.s)) * reach(ox, oy) + q.d * (1 - Math.pow(1 - u, 2));
+    const r = q.r0 + (et - ease(q.s)) * run + q.d * (1 - Math.pow(1 - u, 2));
     const ang = q.a + q.drift * u;
     const alpha = Math.pow(1 - u, 0.7);
     ctx.beginPath();
     ctx.arc(ox + r * Math.cos(ang), oy + r * Math.sin(ang), q.size * (1 - 0.55 * u), 0, 2 * Math.PI);
-    ctx.fillStyle = `rgba(250,247,243,${0.95 * alpha})`;
-    ctx.strokeStyle = `rgba(47,111,159,${0.6 * alpha})`;
-    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.95 * alpha;
     ctx.fill();
+    ctx.globalAlpha = 0.6 * alpha;
     ctx.stroke();
   }
 }
+
+function origin() {
+  const box = toggle.getBoundingClientRect();
+  return [box.left + box.width / 2, box.top + box.height / 2];
+}
+
+// all keyframes + droplets for one viewport/toggle position/profile
+function cacheKey(ox, oy, p) {
+  return [innerWidth, innerHeight, ox, oy, p.frames, p.points].join();
+}
+
+function build(ox, oy, p) {
+  return {
+    key: cacheKey(ox, oy, p),
+    root: waveFrames(ox, oy, p),
+    layers: LAYERS.slice(0, p.layers).map(([, , edge]) => waveFrames(ox, oy, p, edge)),
+    list: sprayParticles(ox, oy, p)
+  };
+}
+
+function warm() {
+  const [ox, oy] = origin();
+  const p = pick();
+  cache = build(ox, oy, p);
+}
+
+// keep the click path free of keyframe maths: build when idle, rebuild after resizes
+function later() {
+  if (window.requestIdleCallback) {
+    requestIdleCallback(warm, { timeout: 2000 });
+    return;
+  }
+  setTimeout(warm, 200);
+}
+
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(later, 250);
+});
+window.addEventListener("load", later);
 
 function flip() {
   if (busy) {
@@ -155,10 +204,15 @@ function flip() {
     return;
   }
   busy = true;
-  const box = toggle.getBoundingClientRect();
-  const ox = box.left + box.width / 2;
-  const oy = box.top + box.height / 2;
-  const overlays = LAYERS.map(([name, fill]) => {
+  const t0 = performance.now();
+  const [ox, oy] = origin();
+  const p = pick();
+  let data = cache;
+  if (!data || data.key !== cacheKey(ox, oy, p)) {
+    data = build(ox, oy, p);
+    cache = data;
+  }
+  const overlays = LAYERS.slice(0, p.layers).map(([name, fill]) => {
     const el = document.createElement("div");
     el.className = "wave-foam";
     el.style.viewTransitionName = name;
@@ -166,15 +220,18 @@ function flip() {
     el.setAttribute("aria-hidden", "true");
     return el;
   });
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const canvas = document.createElement("canvas");
-  canvas.className = "wave-spray";
-  canvas.width = Math.round(innerWidth * dpr);
-  canvas.height = Math.round(innerHeight * dpr);
-  canvas.style.width = innerWidth + "px";
-  canvas.style.height = innerHeight + "px";
-  canvas.setAttribute("aria-hidden", "true");
-  overlays.push(canvas);
+  if (p.spray) {
+    const dpr = Math.min(window.devicePixelRatio || 1, p.dpr);
+    canvas.className = "wave-spray";
+    canvas.width = Math.round(innerWidth * dpr);
+    canvas.height = Math.round(innerHeight * dpr);
+    canvas.style.width = innerWidth + "px";
+    canvas.style.height = innerHeight + "px";
+    canvas.setAttribute("aria-hidden", "true");
+    canvas.getContext("2d").scale(dpr, dpr);
+    overlays.push(canvas);
+  }
   let frame = 0;
   let timer = 0;
   function cleanup() {
@@ -188,20 +245,30 @@ function flip() {
     overlays.forEach((el) => root.appendChild(el));
   });
   transition.ready.then(() => {
-    const timing = { duration: DURATION, easing: "linear" };
-    const wave = root.animate({ clipPath: waveFrames(ox, oy) }, { ...timing, pseudoElement: "::view-transition-new(root)" });
-    LAYERS.forEach(([name, , edge]) => {
-      root.animate({ clipPath: waveFrames(ox, oy, edge) }, { ...timing, pseudoElement: `::view-transition-new(${name})` });
+    // a slow first frame means a weak device: use the lite profile from now on
+    if (performance.now() - t0 > 400 && p !== PROFILES.lite) {
+      slow = true;
+      later();
+    }
+    const timing = { duration: p.duration, easing: "linear" };
+    const wave = root.animate({ clipPath: data.root }, { ...timing, pseudoElement: "::view-transition-new(root)" });
+    LAYERS.slice(0, p.layers).forEach(([name], i) => {
+      root.animate({ clipPath: data.layers[i] }, { ...timing, pseudoElement: `::view-transition-new(${name})` });
     });
     // stall guard starts with the animation, not at the click
-    timer = setTimeout(cleanup, DURATION + 1500);
+    timer = setTimeout(cleanup, p.duration + 1500);
+    if (!p.spray) {
+      return;
+    }
     const ctx = canvas.getContext("2d");
-    const list = sprayParticles(ox, oy);
-    ctx.scale(dpr, dpr);
+    let last = -1;
     // particle time follows the wave animation so spray stays in sync with the front
     const loop = () => {
-      const t = Math.min(1, (Number(wave.currentTime) || 0) / DURATION);
-      drawSpray(ctx, list, t, ox, oy);
+      const t = Math.min(1, (Number(wave.currentTime) || 0) / p.duration);
+      if (t !== last) {
+        last = t;
+        drawSpray(ctx, data.list, t, ox, oy);
+      }
       if (t < 1) {
         frame = requestAnimationFrame(loop);
       }
