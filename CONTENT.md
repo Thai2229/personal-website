@@ -24,7 +24,7 @@ Static card: portrait, name, short tagline, social icons. See the Sawad entry in
 1. Home: pinned profile card, intro, recent projects, work experience
 2. Projects
 3. Experience: two jobs (Handshake AI, Alta Vista Insurance), education (UCSD) and skills, from the resume
-4. Offline: hobbies and the side of me outside the job (name is a proposal)
+4. Offline: the side of me outside the job (name is a proposal). Shows three hobbies (surfing, snowboarding, cat owner) as an overlapping photo stack (surfing right, snowboarding left, cat owner bottom-right) that fades in one after another on scroll; hovering or keyboard-focusing a photo brings it to the front and fades the others. Photos are in `assets/offline/` (metadata stripped). Captions are drafts.
 
 ## Projects
 1. Physics Engine: live https://physicsenginethai.vercel.app, code https://github.com/Thai2229/Physics-Engine
