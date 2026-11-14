@@ -33,5 +33,7 @@ Static card: portrait, name, short tagline, social icons. See the Sawad entry in
 
 Thumbnails (assets/projects/): physics-engine.webp is a live-site screenshot of the demo (double pendulum), productivity-app.webp is a crop of a screenshot of the live landing page, tempo.webp is a frame cropped from the Tempo repo's docs/demo.gif (no live site).
 
+Employer logos in assets/logos/ (handshake.webp, alta-vista.webp) are the employers' logos, supplied by the user.
+
 ## Not on the site
 Phone number, GPA and pay rate from the resume are left out on purpose.
