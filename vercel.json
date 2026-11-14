@@ -4,8 +4,5 @@
     { "source": "/", "destination": "/home", "permanent": false },
     { "source": "/index", "destination": "/home", "permanent": false },
     { "source": "/index.html", "destination": "/home", "permanent": false }
-  ],
-  "rewrites": [
-    { "source": "/home", "destination": "/index.html" }
   ]
 }
