@@ -25,3 +25,8 @@ Static card: portrait, name, short tagline, social icons. See the Sawad entry in
 2. Projects
 3. Experience
 4. Offline: hobbies and the side of me outside the job (name is a proposal)
+
+## Projects
+1. Physics Engine: live https://physicsenginethai.vercel.app, code https://github.com/Thai2229/Physics-Engine
+2. Tempo: code https://github.com/Thai2229/Tempo (no live demo)
+3. Productivity App: live https://productivity-app-client-gamma.vercel.app/, code https://github.com/Thai2229/Productivity-App
