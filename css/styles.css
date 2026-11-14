@@ -26,7 +26,7 @@ header.top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--b
 header.top .wrap{display:flex;align-items:center;gap:1rem;height:4.25rem}
 .brand{display:inline-flex;align-items:center;font:800 1.15rem var(--font-head);text-decoration:none;letter-spacing:-.02em;margin-right:auto}
 .brand span{color:var(--accent)}
-.brand img{width:36px;height:36px;margin-right:.6rem;border-radius:10px;flex:none}
+.brand img{width:36px;height:36px;margin-right:.6rem;border-radius:8px;flex:none}
 nav ul{list-style:none;padding:0;display:flex;gap:.25rem}
 nav a{display:block;padding:.45rem .9rem;border-radius:99px;text-decoration:none;font:500 .95rem var(--font-head);color:var(--muted);transition:color .2s,background .2s}
 nav a:hover{color:var(--ink)}
