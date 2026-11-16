@@ -1,7 +1,7 @@
 # Content
 
 ## Photo
-`assets/photo.webp`: portrait looking up and to the side, orange-to-black gradient background.
+`assets/photo.webp`: professional headshot (dark suit, navy tie, grey-blue background), metadata stripped.
 
 ## Social links
 - Instagram: https://www.instagram.com/thaiv.2229/
